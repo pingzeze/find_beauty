@@ -61,7 +61,7 @@ if __name__ == '__main__':
 # Outputs Node(0), Node(1), Node(3), Node(4), Node(2), Node(5)
 
 
-# 3. 
+# 3. 大量数据需要处理，返回所有文件中符合条件的行
 import os
 import fnmatch
 import gzip
@@ -71,9 +71,10 @@ def gen_find(filepat, top):
     '''
     Find all filenames in a directory tree that match a shell wildcard pattern
     '''
-    for path, dirlist, filelist in os.walk(top):
-        for name in fnmatch.filter(filelist, filepat):
-            yield os.path.join(path,name)
+    for path, dirlist, filelist in os.walk(top):    # 从top节点遍历
+        for name in fnmatch.filter(filelist, filepat):  # 筛选符合filepat的文件
+            yield os.path.join(path,name)   # 文件路径
+
 def gen_opener(filenames):
     '''
     Open a sequence of filenames one at a time producing a file object.
@@ -86,14 +87,16 @@ def gen_opener(filenames):
             f = bz2.open(filename, 'rt')
         else:
             f = open(filename, 'rt')
-            yield f 
+            yield f
             f.close()
+
 def gen_concatenate(iterators):
     '''
     Chain a sequence of iterators together into a single sequence.
     '''
-    for it in iterators:
-        yield from it
+    for it in iterators:    # 所有文件作为迭代器
+        yield from it       # 每个文件再进行迭代返回，即返回每个行  => for i in it: yield i
+
 def gen_grep(pattern, lines):
     '''
     Look for a regex pattern in a sequence of lines
@@ -102,3 +105,11 @@ def gen_grep(pattern, lines):
     for line in lines:
         if pat.search(line):
             yield line
+
+lognames = gen_find('access-log*', 'www')
+files = gen_opener(lognames)
+lines = gen_concatenate(files)
+pylines = gen_grep('(?i)python', lines)
+for line in pylines:
+    print(line)
+    
