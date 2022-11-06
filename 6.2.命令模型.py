@@ -4,5 +4,5 @@ class MacroCommand:
         self.commands = list(commands)
 
     def __call__(self):
-        for command in self.commands: # ➋
+        for command in self.commands:
             command()
